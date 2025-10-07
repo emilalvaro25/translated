@@ -1,0 +1,74 @@
+.history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%; /* Ensure it takes up space in flex container */
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clear-history-button {
+  color: var(--Neutral-60);
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.clear-history-button .icon {
+  font-size: 20px;
+}
+
+.clear-history-button:hover:not(:disabled) {
+  color: var(--Neutral-90);
+  background-color: var(--Neutral-20);
+}
+
+.clear-history-button:disabled {
+  color: var(--Neutral-30);
+  cursor: not-allowed;
+}
+
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 8px; /* For scrollbar */
+  flex-grow: 1; /* Allow list to grow and scroll */
+}
+
+.history-item {
+  background-color: var(--Neutral-15);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid var(--Neutral-30);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-text {
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+/* Re-use colors from the main console */
+.history-text.transcribed-text {
+  color: var(--accent-blue);
+}
+
+.history-text.translated-text {
+  color: var(--accent-green);
+}
+
+.empty-history-message {
+  font-size: 14px;
+  color: var(--Neutral-60);
+  text-align: center;
+  padding: 20px 0;
+}

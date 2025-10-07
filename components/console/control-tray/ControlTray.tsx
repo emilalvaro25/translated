@@ -76,6 +76,7 @@ function ControlTray({ children }: ControlTrayProps) {
       audioRecorder.start();
     } else {
       audioRecorder.stop();
+      setMicVolume(0);
     }
     return () => {
       audioRecorder.off('data', onData);
@@ -109,7 +110,7 @@ function ControlTray({ children }: ControlTrayProps) {
           className={cn('action-button mic-button')}
           onClick={handleMicClick}
           title={micButtonTitle}
-          style={{ '--volume': `${micVolume * 150}px` } as React.CSSProperties}
+          style={{ '--volume': `${micVolume * 40}px` } as React.CSSProperties}
         >
           {!muted ? (
             <span className="material-symbols-outlined filled">mic</span>
@@ -140,7 +141,7 @@ function ControlTray({ children }: ControlTrayProps) {
         <div
           className="connection-button-container"
           style={
-            { '--speaker-volume': `${volume * 150}px` } as React.CSSProperties
+            { '--speaker-volume': `${volume * 40}px` } as React.CSSProperties
           }
         >
           <button

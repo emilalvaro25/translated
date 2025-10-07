@@ -40,21 +40,24 @@ export const useTools = create<{
 /**
  * Settings
  */
+const savedVoiceSettings = JSON.parse(localStorage.getItem('voice-settings') || '{}');
 export const useSettings = create<{
-  systemPrompt: string;
   model: string;
   voice: string;
-  setSystemPrompt: (prompt: string) => void;
   setModel: (model: string) => void;
   setVoice: (voice: string) => void;
 }>(set => ({
-  systemPrompt: `Be friendly and conversational.`,
   model: DEFAULT_LIVE_API_MODEL,
-  voice: DEFAULT_VOICE,
-  setSystemPrompt: prompt => set({ systemPrompt: prompt }),
+  voice: savedVoiceSettings.voice || DEFAULT_VOICE,
   setModel: model => set({ model }),
   setVoice: voice => set({ voice }),
 }));
+
+useSettings.subscribe(state => {
+  const { voice } = state;
+  localStorage.setItem('voice-settings', JSON.stringify({ voice }));
+});
+
 
 /**
  * UI
@@ -70,6 +73,17 @@ export const useUI = create<{
 /**
  * Languages
  */
+const initialLanguageState = {
+  fromLanguage: 'Turkish',
+  toLanguage: 'Dutch (Flemish)',
+};
+let savedLanguageState = {};
+try {
+  savedLanguageState = JSON.parse(localStorage.getItem('language-settings') || '{}');
+} catch (e) {
+  console.error("Could not parse language settings from localStorage", e);
+}
+
 export const useLanguageStore = create<{
   fromLanguage: string;
   toLanguage: string;
@@ -77,12 +91,17 @@ export const useLanguageStore = create<{
   setToLanguage: (lang: string) => void;
   swapLanguages: () => void;
 }>(set => ({
-  fromLanguage: 'English',
-  toLanguage: 'Dutch (Flemish)',
+  ...initialLanguageState,
+  ...savedLanguageState,
   setFromLanguage: (lang) => set({ fromLanguage: lang }),
   setToLanguage: (lang) => set({ toLanguage: lang }),
   swapLanguages: () => set(state => ({ fromLanguage: state.toLanguage, toLanguage: state.fromLanguage })),
 }));
+
+useLanguageStore.subscribe(state => {
+  const { fromLanguage, toLanguage } = state;
+  localStorage.setItem('language-settings', JSON.stringify({ fromLanguage, toLanguage }));
+});
 
 
 /**
@@ -108,13 +127,32 @@ export interface ConversationTurn {
   groundingChunks?: GroundingChunk[];
 }
 
+const initialLogState = {
+  turns: [],
+};
+let savedLogState = {};
+try {
+  const savedTurns = localStorage.getItem('translation-history');
+  if (savedTurns) {
+    // Make sure to parse timestamps correctly
+    const parsedTurns = JSON.parse(savedTurns).map((turn: any) => ({
+      ...turn,
+      timestamp: new Date(turn.timestamp),
+    }));
+    savedLogState = { turns: parsedTurns };
+  }
+} catch (e) {
+  console.error("Could not parse translation history from localStorage", e);
+}
+
 export const useLogStore = create<{
   turns: ConversationTurn[];
   addTurn: (turn: Omit<ConversationTurn, 'timestamp'>) => void;
   updateLastTurn: (update: Partial<ConversationTurn>) => void;
   clearTurns: () => void;
 }>((set, get) => ({
-  turns: [],
+  ...initialLogState,
+  ...savedLogState,
   addTurn: (turn: Omit<ConversationTurn, 'timestamp'>) =>
     set(state => ({
       turns: [...state.turns, { ...turn, timestamp: new Date() }],
@@ -132,3 +170,7 @@ export const useLogStore = create<{
   },
   clearTurns: () => set({ turns: [] }),
 }));
+
+useLogStore.subscribe(state => {
+  localStorage.setItem('translation-history', JSON.stringify(state.turns));
+});
