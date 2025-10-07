@@ -78,7 +78,7 @@ export const useLanguageStore = create<{
   swapLanguages: () => void;
 }>(set => ({
   fromLanguage: 'English',
-  toLanguage: 'Dutch', // For Flemish
+  toLanguage: 'Dutch (Flemish)',
   setFromLanguage: (lang) => set({ fromLanguage: lang }),
   setToLanguage: (lang) => set({ toLanguage: lang }),
   swapLanguages: () => set(state => ({ fromLanguage: state.toLanguage, toLanguage: state.fromLanguage })),

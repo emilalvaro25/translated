@@ -569,8 +569,14 @@ header {
 }
 
 @property --volume {
-  syntax: 'length';
-  inherit: false;
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --speaker-volume {
+  syntax: '<length>';
+  inherits: false;
   initial-value: 0px;
 }
 
@@ -659,6 +665,24 @@ header {
   border: 1px solid var(--Neutral-30);
   background: var(--Neutral-5);
   padding: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.control-tray
+  .connection-container.connected
+  .connection-button-container::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--speaker-volume) * -1);
+  left: calc(var(--speaker-volume) * -1);
+  width: calc(100% + var(--speaker-volume) * 2);
+  height: calc(100% + var(--speaker-volume) * 2);
+  background-color: var(--Blue-500);
+  border-radius: 32px;
+  opacity: 0.25;
+  transition: all 0.05s ease-out;
 }
 
 .control-tray .connection-container .text-indicator {

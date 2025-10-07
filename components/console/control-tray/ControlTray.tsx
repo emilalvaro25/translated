@@ -20,7 +20,8 @@
 
 import cn from 'classnames';
 
-import { memo, ReactNode, useEffect, useRef, useState } from 'react';
+// FIX: Import `React` to make the `React` namespace available for type assertions.
+import React, { memo, ReactNode, useEffect, useRef, useState } from 'react';
 import { AudioRecorder } from '../../../lib/audio-recorder';
 import { useUI } from '@/lib/state';
 
@@ -33,10 +34,11 @@ export type ControlTrayProps = {
 function ControlTray({ children }: ControlTrayProps) {
   const [audioRecorder] = useState(() => new AudioRecorder());
   const [muted, setMuted] = useState(false);
+  const [micVolume, setMicVolume] = useState(0);
   const connectButtonRef = useRef<HTMLButtonElement>(null);
   const { toggleSidebar } = useUI();
 
-  const { client, connected, connect, disconnect } = useLiveAPIContext();
+  const { client, connected, connect, disconnect, volume } = useLiveAPIContext();
 
   useEffect(() => {
     if (!connected && connectButtonRef.current) {
@@ -49,6 +51,16 @@ function ControlTray({ children }: ControlTrayProps) {
       setMuted(false);
     }
   }, [connected]);
+
+  useEffect(() => {
+    const onVolume = (vol: number) => {
+      setMicVolume(vol);
+    };
+    audioRecorder.on('volume', onVolume);
+    return () => {
+      audioRecorder.off('volume', onVolume);
+    };
+  }, [audioRecorder]);
 
   useEffect(() => {
     const onData = (base64: string) => {
@@ -97,6 +109,7 @@ function ControlTray({ children }: ControlTrayProps) {
           className={cn('action-button mic-button')}
           onClick={handleMicClick}
           title={micButtonTitle}
+          style={{ '--volume': `${micVolume * 150}px` } as React.CSSProperties}
         >
           {!muted ? (
             <span className="material-symbols-outlined filled">mic</span>
@@ -124,7 +137,12 @@ function ControlTray({ children }: ControlTrayProps) {
       </nav>
 
       <div className={cn('connection-container', { connected })}>
-        <div className="connection-button-container">
+        <div
+          className="connection-button-container"
+          style={
+            { '--speaker-volume': `${volume * 150}px` } as React.CSSProperties
+          }
+        >
           <button
             ref={connectButtonRef}
             className={cn('action-button connect-toggle', { connected })}

@@ -48,7 +48,7 @@ export const LANGUAGES = [
   { name: 'Croatian' },
   { name: 'Czech' },
   { name: 'Danish' },
-  { name: 'Dutch' },
+  { name: 'Dutch (Flemish)' },
   { name: 'English' },
   { name: 'Esperanto' },
   { name: 'Estonian' },
