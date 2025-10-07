@@ -11,6 +11,7 @@ import {
   FunctionResponseScheduling,
   Schema,
 } from '@google/genai';
+import { supabase } from './supabaseClient';
 
 // Fix: Add and export FunctionCall, Template, and useTools for use across the application.
 /**
@@ -118,6 +119,7 @@ export interface GroundingChunk {
 }
 
 export interface ConversationTurn {
+  id?: number;
   timestamp: Date;
   role: 'user' | 'agent' | 'system';
   text: string;
@@ -127,50 +129,96 @@ export interface ConversationTurn {
   groundingChunks?: GroundingChunk[];
 }
 
-const initialLogState = {
-  turns: [],
-};
-let savedLogState = {};
-try {
-  const savedTurns = localStorage.getItem('translation-history');
-  if (savedTurns) {
-    // Make sure to parse timestamps correctly
-    const parsedTurns = JSON.parse(savedTurns).map((turn: any) => ({
-      ...turn,
-      timestamp: new Date(turn.timestamp),
-    }));
-    savedLogState = { turns: parsedTurns };
-  }
-} catch (e) {
-  console.error("Could not parse translation history from localStorage", e);
-}
+const MOCK_USER_EMAIL = 'demo-user@example.com';
 
 export const useLogStore = create<{
   turns: ConversationTurn[];
-  addTurn: (turn: Omit<ConversationTurn, 'timestamp'>) => void;
-  updateLastTurn: (update: Partial<ConversationTurn>) => void;
-  clearTurns: () => void;
+  init: () => Promise<void>;
+  addTurn: (turn: Omit<ConversationTurn, 'timestamp' | 'id'>) => Promise<void>;
+  updateLastTurn: (update: Partial<ConversationTurn>) => Promise<void>;
+  clearTurns: () => Promise<void>;
 }>((set, get) => ({
-  ...initialLogState,
-  ...savedLogState,
-  addTurn: (turn: Omit<ConversationTurn, 'timestamp'>) =>
-    set(state => ({
-      turns: [...state.turns, { ...turn, timestamp: new Date() }],
-    })),
-  updateLastTurn: (update: Partial<Omit<ConversationTurn, 'timestamp'>>) => {
+  turns: [],
+  init: async () => {
+    const { data, error } = await supabase
+      .from('conversation_history')
+      .select('id, turn_data')
+      .eq('user_email', MOCK_USER_EMAIL)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching history:', error);
+      return;
+    }
+
+    if (data) {
+      const turns = data.map(row => ({
+        ...(row.turn_data as object),
+        id: row.id,
+        timestamp: new Date((row.turn_data as any).timestamp),
+      } as ConversationTurn));
+      set({ turns });
+    }
+  },
+  addTurn: async (turn: Omit<ConversationTurn, 'timestamp' | 'id'>) => {
+    const newTurn: Omit<ConversationTurn, 'id'> = { ...turn, timestamp: new Date() };
+
+    const { data, error } = await supabase
+      .from('conversation_history')
+      .insert({ user_email: MOCK_USER_EMAIL, turn_data: newTurn })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error adding turn:', error);
+      return;
+    }
+
+    if (data) {
+      const turnWithId = { ...newTurn, id: data.id };
+      set(state => ({ turns: [...state.turns, turnWithId] }));
+    }
+  },
+  updateLastTurn: async (update: Partial<Omit<ConversationTurn, 'timestamp' | 'id'>>) => {
+    const currentTurns = get().turns;
+    if (currentTurns.length === 0) {
+      return;
+    }
+    const lastTurn = { ...currentTurns[currentTurns.length - 1] };
+    if (!lastTurn.id) {
+        console.error("Cannot update last turn without an ID");
+        return;
+    }
+
+    const updatedTurnData = { ...lastTurn, ...update };
+    const { id, ...turn_data } = updatedTurnData;
+
+    const { error } = await supabase
+      .from('conversation_history')
+      .update({ turn_data })
+      .eq('id', lastTurn.id);
+
+    if (error) {
+        console.error('Error updating turn:', error);
+        return;
+    }
+
     set(state => {
-      if (state.turns.length === 0) {
-        return state;
-      }
-      const newTurns = [...state.turns];
-      const lastTurn = { ...newTurns[newTurns.length - 1], ...update };
-      newTurns[newTurns.length - 1] = lastTurn;
-      return { turns: newTurns };
+        const newTurns = [...state.turns];
+        newTurns[newTurns.length - 1] = updatedTurnData;
+        return { turns: newTurns };
     });
   },
-  clearTurns: () => set({ turns: [] }),
-}));
+  clearTurns: async () => {
+    const { error } = await supabase
+        .from('conversation_history')
+        .delete()
+        .eq('user_email', MOCK_USER_EMAIL);
 
-useLogStore.subscribe(state => {
-  localStorage.setItem('translation-history', JSON.stringify(state.turns));
-});
+    if (error) {
+        console.error('Error clearing history:', error);
+        return;
+    }
+    set({ turns: [] });
+  },
+}));

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+import { useEffect } from 'react';
 import ControlTray from './components/console/control-tray/ControlTray';
 import ErrorScreen from './components/demo/ErrorScreen';
 import StreamingConsole from './components/demo/streaming-console/StreamingConsole';
@@ -25,6 +26,7 @@ import StreamingConsole from './components/demo/streaming-console/StreamingConso
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { LiveAPIProvider } from './contexts/LiveAPIContext';
+import { useLogStore } from './lib/state';
 
 const API_KEY = process.env.GEMINI_API_KEY as string;
 if (typeof API_KEY !== 'string') {
@@ -38,6 +40,10 @@ if (typeof API_KEY !== 'string') {
  * Manages video streaming state and provides controls for webcam/screen capture.
  */
 function App() {
+  useEffect(() => {
+    useLogStore.getState().init();
+  }, []);
+
   return (
     <div className="App">
       <LiveAPIProvider apiKey={API_KEY}>
