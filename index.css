@@ -613,7 +613,7 @@ header {
   height: 100%;
   border-radius: inherit;
   box-shadow: 0 0 calc(var(--volume) * 0.75) var(--volume) var(--Red-500);
-  opacity: 0.7;
+  opacity: 0.9;
   transition: all 0.1s ease-out;
 }
 
@@ -682,7 +682,7 @@ header {
   border-radius: inherit;
   box-shadow: 0 0 calc(var(--speaker-volume) * 0.75) var(--speaker-volume)
     var(--Blue-500);
-  opacity: 0.5;
+  opacity: 0.7;
   transition: all 0.1s ease-out;
 }
 

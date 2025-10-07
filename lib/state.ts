@@ -104,10 +104,11 @@ useLanguageStore.subscribe(state => {
   localStorage.setItem('language-settings', JSON.stringify({ fromLanguage, toLanguage }));
 });
 
-
 /**
  * Logs
  */
+const MOCK_USER_EMAIL = 'demo-user@example.com';
+
 export interface LiveClientToolResponse {
   functionResponses?: FunctionResponse[];
 }
@@ -128,8 +129,6 @@ export interface ConversationTurn {
   toolUseResponse?: LiveClientToolResponse;
   groundingChunks?: GroundingChunk[];
 }
-
-const MOCK_USER_EMAIL = 'demo-user@example.com';
 
 export const useLogStore = create<{
   turns: ConversationTurn[];
